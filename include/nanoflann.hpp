@@ -185,7 +185,8 @@ template <typename Container>
 inline typename std::enable_if<!has_resize<Container>::value, void>::type resize(
     Container& c, const size_t nElements)
 {
-    if (nElements != c.size()) throw std::logic_error("Attempt to resize a fixed size container.");
+    if (nElements != c.size())
+        XomReleaseAssert(false, "Attempted to resize a fixed-size container.");
 }
 
 /**
@@ -448,7 +449,8 @@ class RadiusResultSet
     ResultItem<IndexType, DistanceType> worst_item() const
     {
         if (m_indices_dists.empty())
-            throw std::runtime_error(
+            XomReleaseAssert(
+                false,
                 "Cannot invoke RadiusResultSet::worst_item() on "
                 "an empty list of results.");
         auto it =
@@ -970,10 +972,7 @@ class PooledAllocator
 
             // use the standard C malloc to allocate memory
             void* m = ::malloc(blocksize);
-            if (!m)
-            {
-                throw std::bad_alloc();
-            }
+            XomReleaseAssert(m, "Failed to allocate memory.");
 
             /* Fill first word of new block with pointer to previous block. */
             static_cast<void**>(m)[0] = base_;
@@ -1215,9 +1214,9 @@ class KDTreeBaseClass
         resize(bbox, dims);
         if (obj.dataset_.kdtree_get_bbox(bbox)) return;
         if (!size_)
-            throw std::runtime_error(
-                "[nanoflann] computeBoundingBox() called but "
-                "no data points found.");
+			XomReleaseAssert(false,
+				"[nanoflann] computeBoundingBox() called but "
+				"no data points found.");
         for (Dimension i = 0; i < dims; ++i)
             bbox[i].low = bbox[i].high = dataset_get(obj, vAcc_[0], i);
         for (Offset k = 1; k < size_; ++k)
@@ -1717,7 +1716,7 @@ class KDTreeBaseClass
         load_value(stream, magic);
         if (stream.fail() || magic != SAVE_MAGIC)
         {
-            throw std::runtime_error(
+            XomReleaseAssert(false,
                 "nanoflann loadIndex: invalid file (wrong magic number). "
                 "The stream was not written by nanoflann saveIndex().");
         }
@@ -1732,7 +1731,7 @@ class KDTreeBaseClass
                 "nanoflann loadIndex: version mismatch "
                 "(file=0x%03X, library=0x%03X). Rebuild the index.",
                 file_version, static_cast<unsigned>(NANOFLANN_VERSION));
-            throw std::runtime_error(msg);
+            XomReleaseAssert(false, "{:s}", msg);
         }
 
         uint8_t sz_size_t = 0;
@@ -1748,7 +1747,7 @@ class KDTreeBaseClass
             sz_elem != static_cast<uint8_t>(sizeof(ElementType)) ||
             sz_dist != static_cast<uint8_t>(sizeof(DistanceType)))
         {
-            throw std::runtime_error(
+            XomReleaseAssert(false,
                 "nanoflann loadIndex: type-size mismatch between saved index and "
                 "current template instantiation (sizeof size_t / IndexType / "
                 "ElementType / DistanceType differ). Rebuild the index.");
@@ -1767,7 +1766,7 @@ class KDTreeBaseClass
 
         if (stream.fail())
         {
-            throw std::runtime_error(
+            XomReleaseAssert(false,
                 "nanoflann loadIndex: unexpected end of stream or read error.");
         }
     }
@@ -1958,7 +1957,7 @@ class KDTreeSingleIndexAdaptor
             Base::root_node_ = this->divideTreeConcurrent(
                 *this, 0, Base::size_, Base::root_bbox_, thread_count, mutex);
 #else /* NANOFLANN_NO_THREADS */
-            throw std::runtime_error("Multithreading is disabled");
+            XomReleaseAssert(false, "Multithreading is disabled");
 #endif /* NANOFLANN_NO_THREADS */
         }
     }
@@ -1989,7 +1988,7 @@ class KDTreeSingleIndexAdaptor
         assert(vec);
         if (this->size(*this) == 0) return false;
         if (!Base::root_node_)
-            throw std::runtime_error(
+            XomReleaseAssert(false,
                 "[nanoflann] findNeighbors() called before building the "
                 "index.");
         DistanceType epsError = 1 + static_cast<DistanceType>(searchParams.eps);
@@ -2027,9 +2026,7 @@ class KDTreeSingleIndexAdaptor
     {
         if (this->size(*this) == 0) return 0;
         if (!Base::root_node_)
-            throw std::runtime_error(
-                "[nanoflann] findWithinBox() called before building the "
-                "index.");
+            XomReleaseAssert(false, "findWithinBox() called before building the index.");
 
         std::stack<NodePtr> stack;
         stack.push(Base::root_node_);
@@ -2364,7 +2361,7 @@ class KDTreeSingleIndexDynamicAdaptor_
             Base::root_node_ = this->divideTreeConcurrent(
                 *this, 0, Base::size_, Base::root_bbox_, thread_count, mutex);
 #else /* NANOFLANN_NO_THREADS */
-            throw std::runtime_error("Multithreading is disabled");
+            XomReleaseAssert(false, "Multithreading is disabled");
 #endif /* NANOFLANN_NO_THREADS */
         }
     }
@@ -2482,7 +2479,6 @@ class KDTreeSingleIndexDynamicAdaptor_
 
     /** @} */
 
-   public:
    public:
     /**  Stores the index in a binary file.
      *   IMPORTANT NOTE: The set of data points is NOT stored in the file, so
@@ -4007,11 +4003,11 @@ struct KDTreeEigenMatrixAdaptor
     {
         const auto dims = row_major ? mat.get().cols() : mat.get().rows();
         if (static_cast<Dimension>(dims) != dimensionality)
-            throw std::runtime_error(
-                "Error: 'dimensionality' must match column count in data "
-                "matrix");
+            XomReleaseAssert(false,
+                  "Error: 'dimensionality' must match column count in data "
+                  "matrix");
         if (DIM > 0 && static_cast<int32_t>(dims) != DIM)
-            throw std::runtime_error(
+            XomReleaseAssert(false,
                 "Data set dimensionality does not match the 'DIM' template "
                 "argument");
         index_ = new index_t(
