@@ -151,7 +151,8 @@ template <typename Container>
 inline typename std::enable_if<!has_resize<Container>::value, void>::type resize(
     Container& c, const size_t nElements)
 {
-    if (nElements != c.size()) throw std::logic_error("Attempt to resize a fixed size container.");
+    if (nElements != c.size())
+        XomReleaseAssert(false, "Attempted to resize a fixed-size container.");
 }
 
 /**
@@ -432,7 +433,8 @@ class RadiusResultSet
     ResultItem<IndexType, DistanceType> worst_item() const
     {
         if (m_indices_dists.empty())
-            throw std::runtime_error(
+            XomReleaseAssert(
+                false,
                 "Cannot invoke RadiusResultSet::worst_item() on "
                 "an empty list of results.");
         auto it =
@@ -959,10 +961,7 @@ class PooledAllocator
 
             // use the standard C malloc to allocate memory
             void* m = ::malloc(blocksize);
-            if (!m)
-            {
-                throw std::bad_alloc();
-            }
+            XomReleaseAssert(m, "Failed to allocate memory.");
 
             /* Fill first word of new block with pointer to previous block. */
             static_cast<void**>(m)[0] = base_;
@@ -1764,7 +1763,7 @@ class KDTreeSingleIndexAdaptor
         assert(vec);
         if (this->size(*this) == 0) return false;
         if (!Base::root_node_)
-            throw std::runtime_error(
+            XomReleaseAssert(false,
                 "[nanoflann] findNeighbors() called before building the "
                 "index.");
         float epsError = 1 + searchParams.eps;
@@ -1802,9 +1801,7 @@ class KDTreeSingleIndexAdaptor
     {
         if (this->size(*this) == 0) return 0;
         if (!Base::root_node_)
-            throw std::runtime_error(
-                "[nanoflann] findWithinBox() called before building the "
-                "index.");
+            XomReleaseAssert(false, "findWithinBox() called before building the index.");
 
         std::stack<NodePtr> stack;
         stack.push(Base::root_node_);
@@ -1963,7 +1960,7 @@ class KDTreeSingleIndexAdaptor
         {
             const Size N = dataset_.kdtree_get_point_count();
             if (!N)
-                throw std::runtime_error(
+                XomReleaseAssert(false,
                     "[nanoflann] computeBoundingBox() called but "
                     "no data points found.");
             for (Dimension i = 0; i < dims; ++i)
@@ -2379,7 +2376,7 @@ class KDTreeSingleIndexDynamicAdaptor_
         {
             const Size N = Base::size_;
             if (!N)
-                throw std::runtime_error(
+                XomReleaseAssert(false,
                     "[nanoflann] computeBoundingBox() called but "
                     "no data points found.");
             for (Dimension i = 0; i < dims; ++i)
@@ -2729,11 +2726,11 @@ struct KDTreeEigenMatrixAdaptor
     {
         const auto dims = row_major ? mat.get().cols() : mat.get().rows();
         if (static_cast<Dimension>(dims) != dimensionality)
-            throw std::runtime_error(
-                "Error: 'dimensionality' must match column count in data "
-                "matrix");
+            XomReleaseAssert(false,
+                  "Error: 'dimensionality' must match column count in data "
+                  "matrix");
         if (DIM > 0 && static_cast<int32_t>(dims) != DIM)
-            throw std::runtime_error(
+            XomReleaseAssert(false,
                 "Data set dimensionality does not match the 'DIM' template "
                 "argument");
         index_ = new index_t(
