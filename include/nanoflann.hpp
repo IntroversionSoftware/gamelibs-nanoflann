@@ -859,14 +859,15 @@ struct SearchParameters
  */
 class PooledAllocator
 {
-    static constexpr size_t WORDSIZE  = 16;  // WORDSIZE must >= 8
-    static constexpr size_t BLOCKSIZE = 8192;
-
     /* We maintain memory alignment to word boundaries by requiring that all
         allocations be in multiples of the machine wordsize.  */
+
     /* Size of machine word in bytes.  Must be power of 2. */
+    static constexpr size_t WORDSIZE  = 16;  // WORDSIZE must >= 8
+
     /* Minimum number of bytes requested at a time from the system.  Must be
      * multiple of WORDSIZE. */
+    static constexpr size_t BLOCKSIZE = 8192;
 
     using Size = size_t;
 
